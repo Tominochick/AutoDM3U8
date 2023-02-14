@@ -40,3 +40,12 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+m3u8url.zip
+m3u8url
+RESULT
+TASK-DOWNLOADING
+TASK-FAILURE
+TASK-SUCCESS
+TASK-WAITING
+AutoDM3U8.pid
