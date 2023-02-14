@@ -2,6 +2,7 @@ import platform
 import sys
 import os
 import shutil
+import threading
 import time
 from subprocess import Popen, TimeoutExpired, PIPE
 
@@ -88,7 +89,7 @@ def createTask(t_args: str, t_filename: str):
             while True:
                 buff = proc.stdout.readline()
                 print("TASK process:" + proc.pid.__str__() + " " + buff, end="")
-                if buff.find("ERROR") > -1:
+                if buff.find("ERROR") > -1 or buff.find("Errno") > -1:
                     print("TASK process:" + proc.pid.__str__() + " 失败")
                     onFailure(t_filename)
                     proc.kill()
@@ -106,22 +107,34 @@ def createTask(t_args: str, t_filename: str):
             onFailure(t_filename)
 
 
+def initTask(filename: str):
+    task_file = os.path.join(Waiting_dir, file)
+    try:
+        with open(task_file, mode="r", encoding="utf-8") as f:
+            args = f.read()
+        createTask(args, file)
+    except Exception as e:
+        print(e)
+        onSubmitFailure(file)
+
+
 if __name__ == '__main__':
     MAX = 10  # 最多10个任务同时下载
     while True:
-        if len(os.listdir(Downloading_dir)) == 10:
-            pass
+        remain_count = len(os.listdir(Waiting_dir))
+        downloading_count = len(os.listdir(Downloading_dir))
+        if downloading_count >= 10:
+            print("MAIN process:" + main_pid.__str__() +
+                  " 剩余任务数" + remain_count.__str__() + "  正在下载数 " + downloading_count.__str__())
+
+            time.sleep(1)
+            continue
         files = os.listdir(Waiting_dir)
-        for file in files:
+        if len(files) > 0:
+            file = files[0]
             if file.endswith(cmd_suffix):
-                task_file = os.path.join(Waiting_dir, file)
-                try:
-                    with open(task_file, mode="r", encoding="utf-8") as f:
-                        args = f.read()
-                    createTask(args, file)
-                except Exception as e:
-                    print(e)
-                    onSubmitFailure(file)
+                threading.Thread(target=initTask, args=(file,)).start()
             else:
                 print("任务文件必须以" + cmd_suffix + "结尾")
                 onSubmitFailure(file)
+        time.sleep(1)
