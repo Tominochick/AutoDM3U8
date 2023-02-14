@@ -53,14 +53,17 @@ def onSubmit(t_filename: str):
     shutil.move(t_file, Downloading_dir)
 
 
-def onSubmitFailure(t_filename: str):
-    t_file = os.path.join(Waiting_dir, t_filename)
-    shutil.move(t_file, Failure_dir)
-
-
 def onFailure(t_filename: str):
     t_file = os.path.join(Downloading_dir, t_filename)
-    shutil.move(t_file, Failure_dir)
+    if os.path.exists(t_file):
+        shutil.move(t_file, Failure_dir)
+
+
+def onSubmitFailure(t_filename: str):
+    t_file = os.path.join(Waiting_dir, t_filename)
+    if os.path.exists(t_file):
+        shutil.move(t_file, Failure_dir)
+    onFailure(t_filename)
 
 
 def onSuccess(t_filename: str):
@@ -76,7 +79,7 @@ def createTask(t_args: str, t_filename: str):
     if t_args.find("--save-dir") == -1:
         run_args += " --save-dir " + Result_dir.__str__()
     if t_args.find("--save-name") == -1:
-        run_args += " --save-name " + t_filename + "###" + time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+        run_args += ' --save-name "' + t_filename + "###" + time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime()) + '"'
 
     with Popen(args=run_args, shell=True, encoding=str_encoding, stdout=PIPE) as proc:
         print("MAIN process:" + main_pid.__str__() + " run:" + run_args)
